@@ -1,0 +1,88 @@
+.page {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  padding: 2rem;
+}
+
+.header {
+  max-width: 56rem;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+  margin-top: 0.5rem;
+}
+
+.tabNav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.tabButton {
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: background-color 0.15s, color 0.15s;
+  border: none;
+  cursor: pointer;
+}
+
+.tabButtonActive {
+  background-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+}
+
+.tabButtonInactive {
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.tabButtonInactive:hover {
+  color: var(--color-text);
+}
+
+.accountRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.accountEmail {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.logoutButton {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.logoutButton:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.main {
+  max-width: 64rem;
+  margin: 0 auto;
+}

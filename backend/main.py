@@ -1,48 +1,58 @@
-import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from pymongo import AsyncMongoClient # <--- The new Native Async Client
-from beanie import init_beanie, Document
-from dotenv import load_dotenv
-from typing import Optional
+from fastapi.middleware.cors import CORSMiddleware
 
-load_dotenv()
+from app.database import init_db
+from app.routes import search, lanes, friends
+from app.models.user import UserCreate, UserRead, UserUpdate
+from app.users import auth_backend, fastapi_users
 
-class Lane(Document):
-    title: str
-    media_type: str
-    path_maker: str
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Runs on startup
+    await init_db()
+    yield
+    # Cleanup on shutdown can go here
 
-    class Settings:
-        name = "lanes"
+app = FastAPI(title="Memory Lane API", lifespan=lifespan)
 
-app = FastAPI()
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.on_event("startup")
-async def startup_db():
-    # We use the new AsyncMongoClient instead of MotorClient
-    client = AsyncMongoClient(os.environ["MONGO_URI"])
-    
-    # Beanie 2026 fully supports the new native driver
-    await init_beanie(database=client.memory_lane_db, document_models=[Lane])
+# Auth routers (fastapi-users) — registration, login/logout, and the
+# current-user profile endpoints. These issue/read the httpOnly cookie
+# the rest of the app relies on (see app/users.py).
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["Auth"]
+)
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["Auth"],
+)
+app.include_router(
+    fastapi_users.get_reset_password_router(), prefix="/auth", tags=["Auth"]
+)
+app.include_router(
+    fastapi_users.get_verify_router(UserRead), prefix="/auth", tags=["Auth"]
+)
+app.include_router(
+    fastapi_users.get_users_router(UserRead, UserUpdate),
+    prefix="/users",
+    tags=["Users"],
+)
+
+# Include Routers
+app.include_router(search.router)
+app.include_router(lanes.router)
+app.include_router(friends.router)
 
 @app.get("/")
-async def read_root():
-    return {"message": "Memory Lane: Native Async Edition 🚀"}
-
-@app.post("/pave-lane")
-async def pave_lane(new_lane: Lane):
-    # This single line does the validation AND the database save!
-    await new_lane.insert()
-    return {"message": f"Success! You paved the lane for {new_lane.title}", "id": str(new_lane.id)}
-
-@app.get("/lanes")
-async def get_all_lanes():
-    # The Librarian goes to the 'lanes' collection and grabs everything
-    # .to_list() turns the database results into a nice Python list
-    lanes = await Lane.find_all().to_list()
-    
-    return {
-        "status": "success",
-        "count": len(lanes),
-        "lanes": lanes
-    }
+async def root():
+    return {"message": "Memory Lane API is operational 🚀"}
